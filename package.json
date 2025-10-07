@@ -10,10 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.14",
+    "@radix-ui/react-slider": "^1.1.3",
+    "@radix-ui/react-slot": "^1.1.1",
+    "@radix-ui/react-tabs": "^1.0.5",
+    "@radix-ui/react-dialog": "^1.1.1",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "tailwindcss": "^4.1.14",
+    "tailwind-merge": "^2.5.3",
+    "tailwindcss": "^3.4.16",
+    "tailwindcss-animate": "^1.0.7",
     "use-sound": "^5.0.0"
   },
   "devDependencies": {
@@ -21,10 +29,12 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.3",
+    "autoprefixer": "^10.4.20",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
+    "postcss": "^8.4.49",
     "vite": "^7.1.7"
   }
 }
