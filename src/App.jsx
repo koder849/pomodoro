@@ -103,21 +103,26 @@ function App() {
     return () => clearInterval(intervalRef.current);
   }, [running, phase, sessionLength, breakLength, playEnd, playStart]);
 
-  // Reset when switching manually
-  useEffect(() => {
-    if (!running) {
-      setTimeLeft(phase === "session" ? sessionLength : breakLength);
-    }
-  }, [sessionLength, breakLength, phase, running]);
-
   // Handlers
-  const handleStart = () => setRunning(true);
-  const handlePause = () => {
-    setRunning(false);
-    clearInterval(intervalRef.current);
+  const handleStart = () => {
+    if (running) return;
+    setRunning(true);
   };
+
+  const handlePause = () => {
+    if (!running) return;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setRunning(false);
+  };
+
   const handleReset = () => {
-    clearInterval(intervalRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setRunning(false);
     setPhase("session");
     setTimeLeft(sessionLength);
@@ -139,8 +144,8 @@ function App() {
       <div className="pointer-events-none absolute -right-24 top-10 h-72 w-72 rounded-full bg-accent/35 blur-[120px] md:h-80 md:w-80" />
       <div className="pointer-events-none absolute -bottom-32 left-1/2 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-secondary/40 blur-[140px] md:h-[420px] md:w-[420px]" />
 
-      <div className= "relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-4 pb-14 pt-16 sm:px-6 md:gap-12 lg:px-8">
-        <Card className="rounded-[2rem]  border border-border/40 bg-background/60">
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-4 pb-14 pt-16 sm:px-6 md:gap-12 lg:px-8">
+        <Card className="rounded-[2rem] border border-border/40 bg-background/60">
           <CardHeader className="flex flex-col gap-6 rounded-[2rem] bg-background/70 p-6 sm:p-8 md:flex-row md:items-center md:justify-between md:gap-10">
             <div className="space-y-5 md:max-w-xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-secondary/40 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-primary/80">
@@ -171,7 +176,7 @@ function App() {
                       {item.name}
                     </span>
                     <span className="text-xs font-normal text-muted-foreground data-[state=active]:text-primary-foreground/80">
-                      {item.description}
+                      {/* {item.description} */}
                     </span>
                   </TabsTrigger>
                 ))}
@@ -201,33 +206,36 @@ function App() {
                       <span className="mt-4 text-[clamp(3rem,10vw,4.5rem)] font-bold tracking-tight text-foreground">
                         {formatTime(timeLeft)}
                       </span>
-                      {!running && (
-                        <Button
-                          size="icon"
-                          onClick={handleStart}
-                          className="mt-5 h-14 w-14 rounded-full shadow-lg"
-                        >
-                          <Play className="h-6 w-6" />
-                        </Button>
-                      )}
                     </div>
                   </div>
 
-                  {/* Small Pause + Reset icons below */}
+                  {/* Play / Pause / Reset controls */}
                   <div className="flex items-center gap-4 mt-2">
+                    <Button
+                      onClick={handleStart}
+                      disabled={running}
+                      className="flex items-center gap-2 rounded-full border border-primary/60 bg-primary px-6 py-5 font-semibold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-border/40 disabled:bg-background/30 disabled:text-muted-foreground"
+                    >
+                      <Play className="h-5 w-5" />
+                      Start
+                    </Button>
+
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={handlePause}
                       disabled={!running}
-                      className="rounded-full border border-border/50 bg-background/40 hover:bg-background/70"
+                      aria-label="Pause timer"
+                      className="rounded-full border border-border/50 bg-background/40 hover:bg-background/70 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <Pause className="h-5 w-5 text-muted-foreground" />
                     </Button>
+
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={handleReset}
+                      aria-label="Reset timer"
                       className="rounded-full border border-border/50 bg-background/40 hover:bg-background/70"
                     >
                       <RefreshCw className="h-5 w-5 text-muted-foreground" />
@@ -260,7 +268,13 @@ function App() {
                     max={SESSION_RANGE.max}
                     step={1}
                     value={[sessionMinutes]}
-                    onValueChange={(val) => setSessionLength(val[0] * 60)}
+                    onValueChange={(val) => {
+                      const next = val[0] * 60;
+                      setSessionLength(next);
+                      if (!running && phase === "session") {
+                        setTimeLeft(next);
+                      }
+                    }}
                   />
                 </div>
               </div>
@@ -286,7 +300,13 @@ function App() {
                     max={BREAK_RANGE.max}
                     step={1}
                     value={[breakMinutes]}
-                    onValueChange={(val) => setBreakLength(val[0] * 60)}
+                    onValueChange={(val) => {
+                      const next = val[0] * 60;
+                      setBreakLength(next);
+                      if (!running && phase === "break") {
+                        setTimeLeft(next);
+                      }
+                    }}
                   />
                 </div>
               </div>
