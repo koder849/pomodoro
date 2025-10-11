@@ -54,8 +54,7 @@ function formatTime(seconds) {
 
 function getThemeClass(theme) {
   return (
-    THEMES.find((item) => item.id === theme)?.className ??
-    THEMES[0].className
+    THEMES.find((item) => item.id === theme)?.className ?? THEMES[0].className
   );
 }
 
@@ -65,13 +64,19 @@ function App() {
   const [timeLeft, setTimeLeft] = useState(sessionLength);
   const [phase, setPhase] = useState("session");
   const [running, setRunning] = useState(false);
-  const [theme, setTheme] = useState(THEMES[0].id);
+  // const [theme, setTheme] = useState(THEMES[1].id);
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    const iniitialValue = JSON.parse(saved);
+    return iniitialValue || THEMES[1].id;
+  })
   const intervalRef = useRef(null);
   const [playStart] = useSound(startSfx, { volume: 0.35 });
   const [playEnd] = useSound(endSfx, { volume: 0.4 });
 
   // Theme management
   useEffect(() => {
+    localStorage.setItem("theme", JSON.stringify(theme));
     document.documentElement.setAttribute("data-theme", theme);
     const themeClass = getThemeClass(theme);
     const backgroundClasses = THEMES.map((item) => item.className);
@@ -164,7 +169,11 @@ function App() {
             </div>
 
             {/* Theme Tabs */}
-            <Tabs value={theme} onValueChange={setTheme} className="w-full sm:w-auto">
+            <Tabs
+              value={theme}
+              onValueChange={setTheme}
+              className="w-full sm:w-auto"
+            >
               <TabsList className="grid w-full grid-cols-1 gap-2 bg-background/70 p-2 sm:inline-flex sm:h-auto sm:w-auto sm:items-stretch">
                 {THEMES.map((item) => (
                   <TabsTrigger
@@ -212,23 +221,17 @@ function App() {
                   {/* Play / Pause / Reset controls */}
                   <div className="flex items-center gap-4 mt-2">
                     <Button
-                      onClick={handleStart}
-                      disabled={running}
+
+                      onClick={running ? handlePause : handleStart}
                       className="flex items-center gap-2 rounded-full border border-primary/60 bg-primary px-6 py-5 font-semibold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-border/40 disabled:bg-background/30 disabled:text-muted-foreground"
                     >
-                      <Play className="h-5 w-5" />
-                      Start
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handlePause}
-                      disabled={!running}
-                      aria-label="Pause timer"
-                      className="rounded-full border border-border/50 bg-background/40 hover:bg-background/70 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <Pause className="h-5 w-5 text-muted-foreground" />
+                      {/* 
+                      if running = true -> hide start icon and show pause icon 
+                      else 
+                         show start icon and hide pause icon 
+                      */}
+                      {running ? <Pause className="h-5 w-5 text-muted-foreground" /> : <Play className="h-5 w-5" />}
+                      {running ? "Pause" : "Start" }
                     </Button>
 
                     <Button
@@ -328,7 +331,11 @@ function App() {
 
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-10 rounded-2xl">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-10 rounded-2xl"
+                      >
                         View
                       </Button>
                     </DialogTrigger>
@@ -336,7 +343,8 @@ function App() {
                       <DialogHeader>
                         <DialogTitle>Session Cues</DialogTitle>
                         <DialogDescription>
-                          Gentle nudges help you stay focused without distractions.
+                          Gentle nudges help you stay focused without
+                          distractions.
                         </DialogDescription>
                       </DialogHeader>
                       <ul className="space-y-3 text-sm text-muted-foreground">
